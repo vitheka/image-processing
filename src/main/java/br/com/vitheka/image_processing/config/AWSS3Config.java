@@ -14,7 +14,6 @@ import java.net.URI;
 @Configuration
 public class AWSS3Config {
 
-
     private final Environment env;
 
     public AWSS3Config(Environment env) {

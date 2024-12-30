@@ -57,4 +57,16 @@ public class S3Service {
         }
     }
 
+    //todo revisar essa parte
+    public void putImage(String bucketName, String objectName, byte[] imageBytes) {
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectName)
+                .contentType("image/jpeg")
+                .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
+    }
+
 }
