@@ -1,13 +1,13 @@
 package br.com.vitheka.image_processing.controller;
 
 import br.com.vitheka.image_processing.domain.S3BucketObjectRepresentation;
+import br.com.vitheka.image_processing.response.PutImageResponse;
 import br.com.vitheka.image_processing.service.S3Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -38,21 +38,14 @@ public class S3Controller {
 
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.OK)
-    public String uploadImage(@RequestParam("file") MultipartFile file, @RequestParam("bucketName") String bucketName) throws IOException {
+    public PutImageResponse uploadImage(@RequestParam("file") MultipartFile file, @RequestParam("bucketName") String bucketName) throws IOException {
 
-        var objectName = file.getOriginalFilename();
+        var objectName = Objects.requireNonNull(file.getOriginalFilename(), "O nome do arquivo não pode ser nulo!");
 
-       // try {
+        byte[] imageBytes = file.getBytes();
 
-            byte[] imageBytes = file.getBytes();
+        s3Service.putImage(bucketName, objectName, imageBytes);
 
-            s3Service.putImage(bucketName, objectName, imageBytes);
-
-       // } catch (IOException e) {
-       //     log.error("error image: ".concat(e.getMessage()));
-       //     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar a imagem");
-       // }
-
-        return "Imagem enviada com sucesso: ".concat(Objects.requireNonNull(objectName, "name is null!"));
+        return new PutImageResponse("Imagem enviada com sucesso: ".concat(objectName));
     }
 }

@@ -1,9 +1,12 @@
 package br.com.vitheka.image_processing.service;
 
 import br.com.vitheka.image_processing.domain.S3BucketObjectRepresentation;
+import br.com.vitheka.image_processing.exception.ConnectProblemException;
+import br.com.vitheka.image_processing.exception.ImageUploadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
@@ -57,16 +60,24 @@ public class S3Service {
         }
     }
 
-    //todo revisar essa parte
     public void putImage(String bucketName, String objectName, byte[] imageBytes) {
-
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key(objectName)
-                .contentType("image/jpeg")
-                .build();
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectName)
+                    .contentType("image/jpeg")
+                    .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
+
+        } catch (S3Exception e) {
+            throw new ImageUploadException(
+                    String.format("Erro ao enviar a imagem '%s' para o bucket '%s': %s", objectName, bucketName, e.awsErrorDetails().errorMessage())
+            );
+        } catch (SdkClientException e) {
+            throw new ConnectProblemException(String.format("Erro ao conectar: '%s'", e.getMessage()));
+        }
     }
+
 
 }
