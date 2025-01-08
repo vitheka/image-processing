@@ -6,8 +6,13 @@ import br.com.vitheka.image_processing.exception.ImageUploadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -23,9 +28,12 @@ public class S3Service {
     private final Logger log = LoggerFactory.getLogger(S3Service.class);
 
     private final S3Client s3Client;
+    private final LambdaClient lambdaClient;
 
-    public S3Service(S3Client s3Client) {
+
+    public S3Service(S3Client s3Client, LambdaClient lambdaClient) {
         this.s3Client = s3Client;
+        this.lambdaClient = lambdaClient;
     }
 
     public void createBucket(String bucketName) {
@@ -69,6 +77,9 @@ public class S3Service {
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
+            log.info("Imagem enviada para o bucket S3 com sucesso!");
+
+            invokeLambdaFunction(bucketName, objectName);
 
         } catch (S3Exception e) {
             throw new ImageUploadException(
@@ -79,5 +90,21 @@ public class S3Service {
         }
     }
 
+    private void invokeLambdaFunction(String bucketName, String objectName) {
+        try {
+            String payload = String.format("{\"bucketName\": \"%s\", \"objectName\": \"%s\"}", bucketName, objectName);
 
+            InvokeRequest request = InvokeRequest.builder()
+                    .functionName("nome-da-sua-lambda-function")
+                    .payload(SdkBytes.fromUtf8String(payload))
+                    .build();
+
+            InvokeResponse response = lambdaClient.invoke(request);
+            String responsePayload = response.payload().asUtf8String();
+            log.info("Resposta da Lambda: {}", responsePayload);
+        } catch (LambdaException e) {
+            log.error("Erro ao invocar a função Lambda: {}", e.getMessage());
+            throw new RuntimeException("Erro ao invocar a função Lambda", e);
+        }
+    }
 }
