@@ -71,7 +71,6 @@
 			<artifactId>lambda</artifactId>
 		</dependency>
 
-
 	</dependencies>
 
 	<build>

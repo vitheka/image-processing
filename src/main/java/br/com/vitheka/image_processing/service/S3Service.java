@@ -1,8 +1,8 @@
 package br.com.vitheka.image_processing.service;
 
-import br.com.vitheka.image_processing.domain.S3BucketObjectRepresentation;
-import br.com.vitheka.image_processing.exception.ConnectProblemException;
-import br.com.vitheka.image_processing.exception.ImageUploadException;
+
+import br.com.vitheka.image_processing.exception.*;
+import br.com.vitheka.image_processing.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 
 @Service
 public class S3Service {
@@ -49,7 +50,7 @@ public class S3Service {
         }
     }
 
-    public void putObject(String bucketName, S3BucketObjectRepresentation s3BucketObjectRepresentation) {
+    public void putObject(String bucketName, S3BucketObjectRepresentation  s3BucketObjectRepresentation) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(s3BucketObjectRepresentation.objectName())
